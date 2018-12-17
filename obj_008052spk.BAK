@@ -1,0 +1,132 @@
+* Criação *********************************************************************************************************** 
+* PROGRAMADOR(A).:  Julio Cesar                                                                                     *
+* DATA...........:  14/02/2010                                                                                      *
+* HORÁRIO........:  13;00                                                                                           *
+********************************************************************************************************************* 
+* CLIENTE..: Animale                                                                                                *
+* OBJETIVO.: Inclusao campo Filial Estoque em funcao das entradas RBX/TRIMIX
+*TRATAMENTO PARA FATURAMENTO RBX/TRIMIX E MOVIMENTACAO ESTOQUE ATAACDO/ESTOQUE CENTRAL						                    *
+********************************************************************************************************************* 
+******************************************************
+*- Programa Base de Criação de Objeto de Entrada
+********************************************************************
+*- O programa deve ser texto com o nome = OBJ_xxxxxx.prg onde x=numero da tela
+*- Este arquivo deve ser colocado no diretorio \Linx_sql\Linx\Exclusivos 
+*******************************************************************************
+*- Existem 2 parametros que influem nos objetos de Entrada:  
+*  utiliza_objeto_entrada = .f. desliga os objetos de entrada para testar telas sem os mesmos
+*  mostra_nome_obj = .t. mostra o nome dos objetos no tooltip em tempo de execução para facilitar o desenvolvimento
+*********************************************************************************
+ 
+
+*********************************************************************************
+* - Atencao !!!!!!!!!!!														   -*
+* - Toda vez que houver qualquer alteracao no PRG deve-se apagar o arquivo FXP -*
+*********************************************************************************
+
+*
+*                 Abaixo segue Programa objeto sem Codigo 
+*
+*
+*- Definindo a classe do objeto de entrada que sera criado na Form.
+define class obj_entrada as custom
+	*- Nome do metodo/função que os objetos linx vão chamar.
+	procedure metodo_usuario
+		*- Parametros do metodo:
+		*- Xmetodo= nome do metodo
+		*- Xobjeto= variavel com a referencia ao objeto
+		*- Xnome_obj  = nome do objeto
+		lparam xmetodo, xobjeto ,xnome_obj
+		
+		******************** Metodos chamados pelo FORMSET
+		*	USR_INIT
+		*	USR_ALTER_BEFORE  ->Return .f. Para o Metodo
+		*	USR_ALTER_AFTER    
+		*	USR_INCLUDE_AFTER
+		*	USR_SEARCH_BEFORE ->Return .f. Para o Metodo
+		*	USR_SEARCH_AFTER
+		*	USR_CLEAN_AFTER
+		*	
+		*	USR_SAVE_BEFORE   ->Return .f. Para o Metodo 
+		*	USR_SAVE_AFTER
+		*	USR_ITEN_DELETE_BEFORE ->Return .f. Para o Metodo
+		*	USR_ITEN_DELETE_AFTER
+		*	USR_ITEN_INCLUDE_BEFORE ->Return .f. Para o Metodo
+		*	USR_ITEN_INCLUDE_AFTER
+		*
+		***************** Metodos que ocorrem dentro da Transaction do Banco de Dados
+		*	USR_TRIGGER_AFTER ->Return .f. Para o Salvamento e da Rollback
+		*	USR_TRIGGER_BEFORE ->Return .f. Para o Salvamento e da Rollback
+
+
+		******************** Metodo chamado pelos Objetos na Validação
+		*   USR_VALID -> Return .f. Não deixa o Usuario sair do objeto.
+
+		******************** Metodo chamado pelos PageFrames
+		*   USR_ACTIVE_PAGE -> Return .f. Para o Metodo.
+
+		*- Inicio dos procedimentos do Usuario
+		*- Testando qual o metodo que esta chamando o metodo entrada
+		*=messagebox( 'Metodo '+ UPPER(xmetodo) + ' Nome Objeto ' + upper(xnome_obj) )
+		do case
+			*- metodo do inicio da form
+			
+ 
+*!*					case UPPER(xmetodo) == 'USR_INIT' 
+*!*					
+*!*						xalias=alias()
+*!*				     	 		
+*!*						
+*!*					    if	!f_vazio(xalias)	
+*!*						  sele &xalias 
+*!*					    ENDIF
+*!*					    
+				case UPPER(xmetodo) == 'USR_BTO_AVANCA_ANTES' AND upper(xnome_obj) == 'CMDAVANCA'
+								if Thisformset.LX_FORM1.LX_PAGEFRAME1.page4.LX_PAGEFRAME1.ActivePage = 1 
+									f_select("select * from prop_producao_programa where propriedade ='00038' and programacao =?v_producao_ordem_01.programacao","xVerTipoProg")
+									sele xVerTipoProg
+									
+									if xVerTipoProg.valor_propriedade = 'MOSTRUARIO'
+										Sele v_producao_geracao_00_programacao
+										Scan
+											f_select("select * from anm_tb_bloq_ficha_tecnica_pa where produto = ?v_producao_geracao_00_programacao.produto","xVerFinMost")
+											TEXT TO xVerFinMost NOSHOW TEXTMERGE
+												select b.revenda, a.* 
+												from anm_tb_bloq_ficha_tecnica_pa a
+												join produtos b
+												ON a.produto = b.produto
+												where a.produto = ?v_producao_geracao_00_programacao.produto
+												and b.revenda = 0
+											ENDTEXT
+											F_SELECT(xVerFinMost, 'Cur_VerFinMost')
+											
+											Sele Cur_VerFinMost
+											
+											TEXT TO xVerFinMost NOSHOW TEXTMERGE
+												select b.revenda, a.* 
+												from anm_tb_bloq_ficha_tecnica_pa a
+												join produtos b
+												ON a.produto = b.produto
+												where a.produto = ?v_producao_geracao_00_programacao.produto
+												and b.revenda = 0
+											ENDTEXT
+											F_SELECT(xVerFinMost, 'Cur_VerFinMost')
+											
+											If !F_VAZIO(Cur_VerFinMost.produto)
+												If xVerFinMost.ft_most_pronto = .f. and v_producao_geracao_00_programacao.marca = 1
+													xProd = xVerFinMost.produto
+													Messagebox("O Produto "+alltrim(xProd)+" não está finalizado !!!",0+16,"Bloqueio Mostruário")
+													Release xVerFinMost
+													Return .F. 
+												Endif
+											Endif
+										Endscan
+										Sele v_producao_geracao_00_programacao
+										Go Top
+									endif
+								Endif		  
+			otherwise
+			return .t.				
+		endcase
+	endproc
+enddefine

@@ -1,0 +1,124 @@
+<?xml version = "1.0" encoding="Windows-1252" standalone="yes"?>
+<VFPData>
+	<row objkey="Entrance_object.USR_ALTER_BEFORE" type="E" datatype="@" value_n="0" value_d="" value_t="" value_c="" value_m="" eventvalue_before="lparameters xobjeto as object, xnome_obj as string
+
+xalias=alias()
+					
+						TEXT TO xsel_pgto TEXTMERGE NOSHOW				
+								
+								SELECT ENTRADAS.NF_ENTRADA 
+								FROM ENTRADAS 
+								INNER JOIN CTB_A_PAGAR_MOV 
+								ON ( ENTRADAS.CTB_LANCAMENTO = CTB_A_PAGAR_MOV.LANCAMENTO_MOV 
+								OR ENTRADAS.NUMERO_CONFERENCIA = CTB_A_PAGAR_MOV.LANCAMENTO_MOV ) 
+								AND ENTRADAS.CTB_ITEM = CTB_A_PAGAR_MOV.ITEM_MOV 
+								AND CTB_A_PAGAR_MOV.EMPRESA = '1'
+								JOIN PRODUCAO_RECURSOS C
+								ON ENTRADAS.NOME_CLIFOR = C.NOME_CLIFOR
+								WHERE ENTRADAS.NF_ENTRADA = '&lt;&lt;V_PRODUCAO_OS_01.NF_ENTRADA&gt;&gt;'
+								AND C.DESC_RECURSO = '&lt;&lt;V_PRODUCAO_OS_01.DESC_RECURSO&gt;&gt;'
+						
+						ENDTEXT
+						
+						f_select(xsel_pgto,&quot;xVerifica_pgto&quot;)
+							
+							sele xVerifica_pgto
+							IF RECCOUNT()&gt;0
+								MESSAGEBOX('Exitem Titulos Pagos, Impossível Continuar!!',0+48)
+								RETURN .F.
+							ENDIF
+							
+					if !f_vazio('xalias') 	
+						sele &amp;xalias
+					endif" eventvalue_after="lparameters xobjeto as object, xnome_obj as string" signature="lparameters xobjeto as object, xnome_obj as string" original_value_n="0" original_value_d="" original_value_t="" original_value_c="" original_value_m=""/>
+	<row objkey="Entrance_object.USR_SAVE_BEFORE" type="E" datatype="@" value_n="0" value_d="" value_t="" value_c="" value_m="" eventvalue_before="lparameters xobjeto as object, xnome_obj as string
+
+IF thisformset.p_tool_status $'IA'
+						 
+					  
+						xalias=alias()
+					
+						if f_vazio(v_producao_os_01.nf_entrada) 	
+							messagebox(&quot;É Obrigatório a digitação da Nota Fiscal de Entrada&quot;+chr(13)+&quot;Verifique!&quot;,48,&quot;Atenção!!!&quot;)
+							retu .f.
+						endif	
+					
+						sele v_producao_os_01_tarefas
+						go top	
+						xOP=v_producao_os_01_tarefas.ordem_producao 
+
+					
+						text to xsel noshow textmerge	 
+							select * from FX_PRODUCAO_ORDEM_HIST_OS('&lt;&lt;xOP&gt;&gt;') where nf_entrada='&lt;&lt;v_producao_os_01.nf_entrada&gt;&gt;'
+						endtext				
+						
+						f_select(xsel,'curNF')
+						
+						sele curNF
+						if	reccount()=0
+							messagebox(&quot;Esta Nota Fiscal não está registrada para esta OP.&quot;+chr(13)+&quot;Verifique!&quot;,48,&quot;Atenção!!!&quot;)
+							retu .f.
+						endif	
+						
+						if !f_vazio('xalias') 	
+							sele &amp;xalias
+						endif
+						
+					ENDIF		
+					
+					IF thisformset.p_tool_status = 'E'
+					
+						xalias=alias()
+					
+						TEXT TO xsel_pgto TEXTMERGE NOSHOW				
+								
+								SELECT ENTRADAS.NF_ENTRADA 
+								FROM ENTRADAS 
+								INNER JOIN CTB_A_PAGAR_MOV 
+								ON ( ENTRADAS.CTB_LANCAMENTO = CTB_A_PAGAR_MOV.LANCAMENTO_MOV 
+								OR ENTRADAS.NUMERO_CONFERENCIA = CTB_A_PAGAR_MOV.LANCAMENTO_MOV ) 
+								AND ENTRADAS.CTB_ITEM = CTB_A_PAGAR_MOV.ITEM_MOV 
+								AND CTB_A_PAGAR_MOV.EMPRESA = '1'
+								JOIN PRODUCAO_RECURSOS C
+								ON ENTRADAS.NOME_CLIFOR = C.NOME_CLIFOR
+								WHERE ENTRADAS.NF_ENTRADA = '&lt;&lt;V_PRODUCAO_OS_01.NF_ENTRADA&gt;&gt;'
+								AND C.DESC_RECURSO = '&lt;&lt;V_PRODUCAO_OS_01.DESC_RECURSO&gt;&gt;'
+						
+						ENDTEXT
+						
+						f_select(xsel_pgto,&quot;xVerifica_pgto&quot;)
+							
+							sele xVerifica_pgto
+							IF RECCOUNT()&gt;0
+								MESSAGEBOX('Exitem Titulos Pagos, Impossível Continuar!!',0+48)
+								RETURN .F.
+							ENDIF
+					
+						if !f_vazio('xalias') 	
+								sele &amp;xalias
+						endif
+					
+					ENDIF" eventvalue_after="lparameters xobjeto as object, xnome_obj as string" signature="lparameters xobjeto as object, xnome_obj as string" original_value_n="0" original_value_d="" original_value_t="" original_value_c="" original_value_m=""/>
+	<row objkey="THISFORMSET.LX_FORM1.TX_NF_ENTRADA.VALID" type="E" datatype="#" value_n="0" value_d="" value_t="" value_c="" value_m="" eventvalue_before="xalias=alias()
+				
+					sele v_producao_os_01_tarefas
+					go top	
+					xOP=v_producao_os_01_tarefas.ordem_producao 
+				
+					text to xsel noshow textmerge	 
+						select * from FX_PRODUCAO_ORDEM_HIST_OS('&lt;&lt;xOP&gt;&gt;') where nf_entrada='&lt;&lt;v_producao_os_01.nf_entrada&gt;&gt;'
+					endtext				
+					
+					f_select(xsel,'curNF')
+					
+					sele curNF
+					if	reccount()=0
+						messagebox(&quot;Esta Nota Fiscal não está registrada para esta OP.&quot;+chr(13)+&quot;Verifique!&quot;,48,&quot;Atenção!!!&quot;)
+						retu .f.
+					endif	
+						
+				
+					if !f_vazio('xalias') 	
+						sele &amp;xalias
+					endif" eventvalue_after="" signature="" original_value_n="0" original_value_d="" original_value_t="" original_value_c="" original_value_m=""/>
+</VFPData>

@@ -1,0 +1,1 @@
+criado o parametro ANM_INTERNET_BLOQ_LIMITE

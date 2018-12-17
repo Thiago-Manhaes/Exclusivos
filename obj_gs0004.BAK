@@ -1,0 +1,403 @@
+* Criação *********************************************************************************************************** 
+* PROGRAMADOR(A).:  Sidnei Stellet                                                                                                *
+* DATA...........:                                                                                                  *
+* HORÁRIO........:                                                                                                  *
+********************************************************************************************************************* 
+* CLIENTE..: Animale                                                                                                        *
+* OBJETIVO.: Bloquear botoes de busca ultimo preco compra e alteracao de custo de produto com entrada no estoque                                                                                                     *
+* OBJETIVO.: Bloquear Alteracoes apos fases de producao
+* OBJETIVO.: Recalculo de Custos
+* OBJETIVO.: Recalculo de preco atacado automatico
+********************************************************************************************************************* 
+
+* Alteração ********************************************************************************************************* 
+* PROGRAMADOR(A).:                                                                                                  *
+* DATA...........:                                                                                                  *
+* HORÁRIO........:                                                                                                  *
+********************************************************************************************************************* 
+* CLIENTE..:                                                                                                        *
+* OBJETIVO.:                                                                                                        *
+********************************************************************************************************************* 
+
+
+********************************************************************************************************************* 
+*- Programa Base de Criação de Objeto de Entrada                                                                    *
+********************************************************************************************************************* 
+*- O programa deve ser texto com o nome = OBJ_xxxxxx.prg onde x=numero da tela                                      *
+*- Este arquivo deve ser colocado no diretorio \Linx_sql\Linx\Exclusivos                                            *
+********************************************************************************************************************* 
+*- Existem 2 parametros que influem nos objetos de Entrada:                                                         *
+*  utiliza_objeto_entrada = .f. desliga os objetos de entrada para testar telas sem os mesmos                       *
+*  mostra_nome_obj = .t. mostra o nome dos objetos no tooltip em tempo de execução para facilitar o desenvolvimento *
+********************************************************************************************************************* 
+* - Atencao !!!!!!!!!!!														                                        *
+* - Toda vez que houver qualquer alteracao no PRG deve-se apagar o arquivo FXP                                      *
+********************************************************************************************************************* 
+
+define class obj_entrada as custom
+	*- Nome do metodo/função que os objetos linx vão chamar.
+
+	procedure metodo_usuario
+		*- Parametros do metodo:
+		*- Xmetodo= nome do metodo
+		*- Xobjeto= variavel com a referencia ao objeto
+		*- Xnome_obj  = nome do objeto
+		lparam xmetodo, xobjeto ,xnome_obj
+		
+		******************** Metodos chamados pelo FORMSET
+		*	USR_INIT  												=> NA INICIALIZACAO DA TELA 
+		*	USR_ALTER_BEFORE  -> Return .f. Para o Metodo 			=> ANTES DA ALTERACAO ,AO CLICKAR ANTES DE LIBERAR OS CAMPOS
+		*	USR_ALTER_AFTER 										=> APOS LIBERAR OS CAMPOS PARA INCLUSAO   
+		*	USR_INCLUDE_AFTER 										=> APOS LIBERAR OS CAMPOS PARA INCLUSAO
+		*	USR_SEARCH_BEFORE -> Return .f. Para o Metodo PESQUISA	=> ANTES DE FAZER A PESQUISA NO BANCO
+		*	USR_SEARCH_AFTER										=> APOS FAZER A PESQUISA NO BANCO
+		*	USR_CLEAN_AFTER 										=> APOS LIMPAR A TELA 
+		*	USR_REFRESH                                             => 
+		*	USR_SAVE_BEFORE   -> Return .f. Para o Metodo 			=> SALVAR ANTES DE JOGAR INFORMACOES NO BANCO
+		*	USR_SAVE_AFTER                                          => APOS SALVAR AS INFORMACOES    NO BANCO
+		*	USR_ITEN_DELETE_BEFORE -> Return .f. Para o Metodo 		=> ANTES DE EXCLUIR ITEN NA TABELA FILHA '+'
+		*	USR_ITEN_DELETE_AFTER                                   => APOS DELETAR UM ITEM NA TABELA FILHA '-' 
+		*	USR_ITEN_INCLUDE_BEFORE -> Return .f. Para o Metodo 	=> ANTES DE INCLUIR ITEM NA TABELA FILHA
+		*	USR_ITEN_INCLUDE_AFTER									=> APOS INCLUIR ITEM NA TABELA FILHA 
+		*
+		***************** Metodos que ocorrem dentro da Transaction do Banco de Dados
+		*	USR_TRIGGER_AFTER ->Return .f. Para o Salvamento e da Rollback ANTES DE EXECUTAR UMA TRIGGER
+		*	USR_TRIGGER_BEFORE ->Return .f. Para o Salvamento e da Rollback
+
+
+		******************** Metodo chamado pelos Objetos na Validação
+		*   USR_VALID -> Return .f. Não deixa o Usuario sair do objeto.
+
+		******************** Metodo chamado pelos PageFrames
+		*   USR_ACTIVE_PAGE -> Return .f. Para o Metodo.
+
+		*- Inicio dos procedimentos do Usuario
+		*- Testando qual o metodo que esta chamando o metodo entrada
+		
+		*=messagebox( 'Metodo '+ UPPER(xmetodo) + ' Nome Objeto ' + upper(xnome_obj) )
+		
+		do case
+					
+			case UPPER(xmetodo) == 'USR_INIT' and upper(xnome_obj) == 'VENDAS_998' and thisformset.p_tool_status = "L"
+				
+				xalias=alias()
+					xVersao = '01.1'
+					f_update("update transacoes set versao_liberada = ?xVersao where control_sistema like '"+right(ALLTRIM(Thisformset.p_controle_sistema),6)+"%' and versao_liberada <> ?xVersao ")
+					f_select("Select valor_atual from parametros where parametro = 'ver_hotfix'","CurVersaoLinx")
+					WAIT WINDOW "Versão: "+allt(CurVersaoLinx.valor_atual)+"."+xVersao NOWAIT 
+
+					thisformset.lx_FORM1.lx_pageframe1.page1.cmb_status.RowSource = "v_vendas_status_00.desc_status,status"
+					thisformset.lx_FORM1.lx_pageframe1.page1.cmb_status.RowSourcetype= 2
+					
+				if !f_vazio(xalias)
+					sele &xalias
+				endif		
+					
+				**Inicio Inclusao Campos Novos de Produtos no Cursor Pai -- v_producao_programa_00  
+				sele v_vendas_00
+				xalias_pai=alias()
+
+  				oCur = getcursoradapter(xalias_pai)
+				oCur.addbufferfield("VENDAS.ANM_GRIFFE", "C(25)",.T., "ANM_GRIFFE", "VENDAS.ANM_GRIFFE")				
+				oCur.confirmstructurechanges() 	
+				**-Fim Inclusao Campos Novos de Produtos no Cursor Pai 
+			
+
+				  f_select ('select GRIFFE from PRODUTOS_GRIFFES','curGriffe',ALIAS())
+				  SELECT curGriffe
+				  APPEND BLANK 
+					
+	              WITH thisformset.lx_form1.lx_PAGEFRAME1.page1
+						.TV_GERENTE.Visible= .F.
+						.lx_label10.Visible= .F.
+						.Lx_label1.Caption = "Griffe"
+						.lx_textbox_valida2.Visible= .F.
+						.cmb_aprovacao.Visible= .F.
+						.lx_label4.caption= 'Solicitante:'
+						.lx_label14.Visible= .F.
+						.addObject("cmb_griffe","cmb_griffe")
+						.label_CADASTRAMENTO.Caption = "Data Separação"	
+	              ENDWITH
+
+				  THISFORMSET.L_LIMPA()	
+			
+		
+			
+			case UPPER(xmetodo)=='USR_CLEAN_AFTER'
+			
+				xalias=alias()
+					
+					IF TYPE("thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe") <> 'U' 						 
+							thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.enabled=.t.
+							thisformset.lx_FORM1.lx_pageframe1.page1.cmb_status.RowSourcetype= 2
+							thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.value = ""
+							thisformset.p_pai_filtro_query = ""
+					ENDIF
+					
+					sele v_vendas_00
+						
+				if !f_vazio(xalias)
+					sele &xalias
+				endif		
+			
+					
+					
+			case UPPER(xmetodo)=='USR_SAVE_BEFORE' 
+			
+				xalias=alias()
+			
+					xMessageBox = ""
+				
+		           SELECT v_vendas_00
+		           REPLACE ANM_GRIFFE WITH thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.value
+					
+					IF f_vazio(ALLTRIM(thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.value))
+						MESSAGEBOX("OBRIGATÓRIO INFORMAR A GRIFFE",0+48)
+						RETURN .F.
+					ELSE 
+						IF f_vazio(ALLTRIM(thisformset.lx_form1.lx_PAGEFRAME1.page1.tx_aprovado_por.value))
+							MESSAGEBOX("OBRIGATÓRIO INFORMAR O SOLICITANTE",0+48)
+							RETURN .F.	
+						ENDIF	
+					ENDIF		
+					
+					sele v_vendas_00_materiais
+					GO top
+					scan 
+					 	f_select("select custo_a_vista from materiais_cores where material = ?v_vendas_00_materiais.material and cor_material = ?v_vendas_00_materiais.cor_material","xBuscaPreco")
+					 	
+					 	sele v_vendas_00_materiais
+					 	replace preco with xBuscaPreco.custo_a_vista
+					endscan					 	 
+					
+					
+					thisformset.refresh()
+					
+				if !f_vazio(xalias)
+					sele &xalias
+				endif	  
+			   
+			   
+			   
+			case UPPER(xmetodo)=='USR_SAVE_AFTER'   
+			 
+				xalias=alias() 
+				   
+				   SELECT v_vendas_00		   
+				   TEXT TO XUPD TEXTMERGE NOSHOW
+				   		update vendas set anm_griffe = '<<ALLTRIM(v_vendas_00.anm_griffe)>>'
+				   		where pedido= '<<ALLTRIM(v_vendas_00.pedido)>>'
+				   ENDTEXT
+
+				   f_update(XUPD)
+				   
+		   			
+					TEXT TO XUPDNAT TEXTMERGE NOSHOW
+					   	UPDATE VENDAS SET NATUREZA_SAIDA = '<<Thisformset.pp_anm_nat_saida_ped_pilot>>'
+					   	WHERE PEDIDO = '<<ALLTRIM(v_vendas_00.pedido)>>'
+					ENDTEXT
+
+					f_update(XUPDNAT)
+
+				   
+				   thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.enabled=.f.	
+				   
+				if !f_vazio(xalias)
+					sele &xalias
+				endif	  
+			
+			
+			
+			case UPPER(xmetodo)=='USR_SEARCH_BEFORE'
+			
+				xalias=alias()
+					
+					IF TYPE("thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe") <> 'U' AND THISFORMSET.P_TOOL_STATUS <> 'L'
+						
+						f_select("select anm_griffe from vendas where pedido=?v_vendas_00.pedido","xGriffe",ALIAS())
+						
+			          	thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.rowsourcetype=1
+			          	thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.value = ALLTRIM(xGriffe.anm_griffe)
+					    
+					ENDIF
+				
+					IF TYPE("thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe") <> 'U' 	
+					 	IF !f_vazio(ALLTRIM(thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.value))
+												
+					    	xFiltraGriffe = "ANM_GRIFFE = '" + ALLTRIM(thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.value) + "'"
+					    	thisformset.p_pai_filtro_query = thisformset.p_pai_filtro_query + IIF(f_vazio(thisformset.p_pai_filtro_query),""," AND ") + xFiltraGriffe
+					    
+					    ENDIF
+					 ENDIF		
+					
+					thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.enabled=.f.
+				
+				 	
+				if !f_vazio(xalias)
+					sele &xalias
+				endif	   	
+			   
+			 
+			 
+			case UPPER(xmetodo)=='USR_REFRESH'
+			
+				xalias=alias()
+					
+					IF TYPE("thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe") <> 'U' AND THISFORMSET.P_TOOL_STATUS <> 'L'
+						
+						f_select("select anm_griffe from vendas where pedido=?v_vendas_00.pedido","xGriffe",ALIAS())					
+			          	thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.value = ALLTRIM(xGriffe.anm_griffe)
+						
+						*--Mostra CLIFOR
+						f_select("Select clifor from cadastro_cli_for where nome_clifor = ?v_vendas_00.cliente_atacado","xNomeClifor")
+						Sele v_vendas_00 
+						Replace Clifor With xNomeClifor.Clifor
+						    
+					ENDIF
+				 	
+				 	IF THISFORMSET.P_TOOL_STATUS = 'P'
+						thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.enabled=.f.
+					ENDIF	
+						
+				if !f_vazio(xalias)
+					sele &xalias
+				endif	
+				
+				
+
+			case UPPER(xmetodo)=='USR_ALTER_BEFORE'
+			
+				xalias=alias()	
+					
+					thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.rowsourcetype=2
+					thisformset.lx_form1.lx_PAGEFRAME1.page1.cmb_griffe.enabled=.T.	
+				
+				if !f_vazio(xalias)
+					sele &xalias
+				endif		
+				
+			case UPPER(xmetodo)== 'USR_ALTER_AFTER'		
+				
+				xalias=alias()	
+					thisformset.lx_FORM1.lx_pageframe1.page1.cmb_filial_emissao.Enabled = Thisformset.pp_anm_libera_campo_filial
+					thisformset.lx_FORM1.lx_pageframe1.page1.cmb_filial.Enabled = Thisformset.pp_anm_libera_campo_filial
+					
+				if !f_vazio(xalias)
+					sele &xalias
+				endif	
+
+
+
+			case UPPER(xmetodo) == 'USR_INCLUDE_AFTER'
+			
+				xalias=alias()
+					
+					IF MESSAGEBOX('Esta Saida é um Remessa de Material para Teste?',256+32+4)=6
+
+						WITH thisformset.lx_FORM1
+							.tv_CLIENTE_ATACADO.Enabled= .T.
+							.lx_pageframe1.page1.cmb_filial_emissao.Value= Thisformset.pp_anm_filial_armazem
+							.lx_pageframe1.page1.cmb_filial_emissao.Enabled = Thisformset.pp_anm_libera_campo_filial
+							.lx_pageframe1.page1.cmb_filial.Value= Thisformset.pp_anm_filial_dest_armazem
+							.lx_pageframe1.page1.cmb_filial.Enabled = Thisformset.pp_anm_libera_campo_filial
+							.lx_pageframe1.page1.cmb_tipo.value= Thisformset.pp_anm_tipo_padrao_teste_mat
+							.lx_pageframe1.page1.cmb_tipo.Enabled = .F.
+							.lx_PAGEFRAME1.page1.Cmb_frete.Value = 0
+								
+						ENDWITH
+					
+					ELSE
+						WITH thisformset.lx_FORM1
+							.tv_CLIENTE_ATACADO.Value   = Thisformset.pp_anm_destino_saida_pilot
+							.tv_CLIENTE_ATACADO.Enabled = .F.
+							.lx_pageframe1.page1.cmb_filial_emissao.Value = Thisformset.pp_anm_filial_armazem
+							.lx_pageframe1.page1.cmb_filial_emissao.Enabled = Thisformset.pp_anm_libera_campo_filial
+							.lx_pageframe1.page1.cmb_filial.Value  = Thisformset.pp_anm_filial_pilotagem
+							.lx_pageframe1.page1.cmb_filial.Enabled = .F.
+							.lx_pageframe1.page1.cmb_tipo.value    =  Thisformset.pp_anm_tipo_padrao_pilotagem
+							.lx_pageframe1.page1.cmb_tipo.Enabled = .T.
+							.lx_PAGEFRAME1.page1.Cmb_frete.Value   = 9
+							.lx_PAGEFRAME1.page1.Cmb_frete.Enabled = .F.
+							
+						ENDWITH
+					
+					ENDIF
+					
+						
+						WITH thisformset.lx_FORM1
+							.tv_PEDIDO.Enabled = .F.
+							.tx_EMISSAO.Enabled= .F.
+							.lx_pageframe1.page1.lx_textbox_valida2.value= "INDEFINIDO"
+							.lx_pageframe1.page1.lx_textbox_valida2.Visible= .F.
+							.lx_pageframe1.page1.TV_GERENTE.Value = "INDEFINIDO" 
+							.lx_pageframe1.page1.TV_GERENTE.Visible= .F.
+							.lx_pageframe1.page1.lx_label10.Visible= .F.
+							.lx_pageframe1.page1.TX_PEDIDO_CLIENTE.Enabled= .F.
+							.lx_pageframe1.page1.label_CONDICAO_PGTO.visible= .F.
+							.lx_pageframe1.page1.TV_condicao_pgto.Value = "999"
+							.lx_pageframe1.page1.TV_condicao_pgto.Visible= .F.
+							.lx_pageframe1.page1.tx_condicao_pgto.Visible=.F.
+							.lx_pageframe1.page1.label_TRANSPORTADORA.visible= .F.
+							.lx_pageframe1.page1.tv_tab_precos.Enabled=.F.
+							.lx_pageframe1.page1.tx_tabela_preco.Enabled= .F.
+							.lx_pageframe1.page1.TV_transportadora.Value= Thisformset.pp_transportadora_padrao
+							.lx_pageframe1.page1.TV_transportadora.Visible= .F.
+							.lx_pageframe1.page1.CMB_tipo_frete.Enabled= .F.
+							.lx_pageframe1.page1.cmb_MOEDA.Enabled= .F.
+							.lx_pageframe1.page1.cmb_status.Enabled= .F.
+							.lx_pageframe1.page1.cmb_griffe.Enabled=.T.							
+							
+							
+						ENDWITH				
+					
+					TEXT TO xDataSeparacao TEXTMERGE NOSHOW
+				
+						select case  
+						           when convert(int,left(convert(varchar(13),getdate(),108),2)) > 15  
+						           then dbo.lx_dias_uteis(null,convert(datetime,convert(varchar(13),getdate(),112)),2)
+						           else dbo.lx_dias_uteis(null,convert(datetime,convert(varchar(13),getdate(),112)),1)
+						end	as data_separacao
+				
+					ENDTEXT	
+				
+						f_select(xDataSeparacao,"xDataSepara",ALIAS())
+						
+						thisformset.lx_form1.lx_PAGEFRAME1.page1.tx_cadastramento.value = xDataSepara.data_separacao
+				
+				
+				if !f_vazio(xalias)
+					sele &xalias
+				endif	
+			
+			
+			otherwise
+				return .t.				
+		endcase
+	endproc
+ENDDEFINE
+
+**************************************************
+*-- Class:        cmb_griffe (p:\tmpsid\entradas_rbx\cmb_griffe.vcx)
+*-- ParentClass:  lx_combobox (c:\arquivos de programas\arquivos comuns\linx sistemas\desenv\lib\lx_class.vcx)
+*-- BaseClass:    combobox
+*-- Time Stamp:   11/10/08 01:57:09 PM
+*
+DEFINE CLASS cmb_griffe AS lx_combobox
+
+Name = "cmb_griffe"
+visible=.t.
+top=50
+left=431
+width=241
+controlsource=v_vendas_00.anm_griffe 
+rowsource='curGriffe'
+enabled=.t.				
+rowsourcetype=2
+value='' 
+
+
+
+ENDDEFINE
+*
+*-- EndDefine: cmb_griffe
+**************************************************

@@ -1,0 +1,402 @@
+
+text to xsel noshow textmerge 
+
+	declare @data_ini datetime
+	declare @data_fim datetime
+
+	select @data_ini='20080101'
+	select @data_fim='20120831'
+
+	SELECT 
+	ano_faturamento,mes_faturamento,
+	case 
+		when mes_faturamento =1  then 'JANEIRO' 
+		when mes_faturamento =2  then 'FEVEREIRO' 
+		when mes_faturamento =3  then 'MARCO' 
+		when mes_faturamento =4  then 'ABRIL' 
+		when mes_faturamento =5  then 'MAIO' 
+		when mes_faturamento =6  then 'JUNHO' 
+		when mes_faturamento =7  then 'JULHO' 
+		when mes_faturamento =8  then 'AGOSTO' 
+		when mes_faturamento =9  then 'SETEMBRO' 
+		when mes_faturamento =10  then 'OUTUBRO' 
+		when mes_faturamento =11  then 'NOVEMBRO' 
+		when mes_faturamento =12  then 'DEZEMBRO' 
+	end as desc_mes_venda,
+	filial,filial_faturamento,valor_fat_contabil,valor_fat_full,valor_fat_dsk,valor_dev_contabil,valor_dev_full,valor_dev_dsk,custo_fat 
+	FROM 
+	
+		(select a.*,
+		isnull(b.valor_dev_contabil,0) as valor_dev_contabil, 
+		isnull(b.valor_dev_full,0) as valor_dev_full,
+		isnull(b.valor_dev_dsk,0) as valor_dev_dsk,
+		isnull(custos_fat.custo_fat,0) as custo_fat
+
+		from 
+		(SELECT year(w.emissao) as ano_faturamento,month(w.emissao) as mes_faturamento,
+		w.filial,
+		case 
+			when year(w.emissao) between 2008 and 2009 and w.filial_faturamento='ATACADO' 
+			then 'TRIMIX' 
+			when year(w.emissao) =2012 and w.filial_faturamento='ATACADO' 
+			then 'GX NORTE DISTRIBUIDORA' 		
+			when year(w.emissao) =2012 and w.filial_faturamento='ATACADO FA' 
+			then 'K3X DISTRIBUIDORA' 		
+			when year(w.emissao) =2012 and w.filial_faturamento='ESTOQUE CENTRAL' 
+			then 'RBX DISTRIBUIDORA' 				
+			else w.filial_faturamento
+		end as filial_faturamento,
+		sum(w.valor_nf) as valor_fat_contabil,
+		sum(w.valor_total_producao) as valor_fat_full,
+		sum(w.dif_producao) as valor_fat_dsk
+		FROM WANM_FATURAMENTO_PRODUCAO w 
+		INNER JOIN FATURAMENTO F   
+		ON W.FILIAL_FATURAMENTO = F.FILIAL 
+		AND      W.NF_SAIDA = F.NF_SAIDA 
+		AND      W.SERIE_NF = F.SERIE_NF 
+		WHERE W.FILIAL IN ('ATACADO', 'ATACADO FA')  
+		AND  W.TIPO_OPERACAO = 'V'  AND  W.NOTA_CANCELADA = 0  
+		AND  W.EMISSAO >= @data_ini AND  W.EMISSAO <= @data_fim
+		group by year(w.emissao),month(w.emissao),w.filial,
+		case 
+			when year(w.emissao) between 2008 and 2009 and w.filial_faturamento='ATACADO' 
+			then 'TRIMIX' 
+			when year(w.emissao) =2012 and w.filial_faturamento='ATACADO' 
+			then 'GX NORTE DISTRIBUIDORA' 		
+			when year(w.emissao) =2012 and w.filial_faturamento='ATACADO FA' 
+			then 'K3X DISTRIBUIDORA' 		
+			when year(w.emissao) =2012 and w.filial_faturamento='ESTOQUE CENTRAL' 
+			then 'RBX DISTRIBUIDORA' 				
+			else w.filial_faturamento
+		end) a 
+
+		left join 
+
+		(SELECT year(a.data_digitacao) as ano_devolucao,month(a.data_digitacao) as mes_devolucao,
+		isnull(case when b.filial_estoque like 'GX NORTE%' then 'ATACADO' else  b.filial_estoque end,'ATACADO') as filial,
+		case 
+				when year(a.data_digitacao) between 2008 and 2009 and b.filial='ATACADO' 
+				then 'TRIMIX' 
+				when year(a.data_digitacao) between 2011 and 2012 and b.filial='ATACADO' 
+				then 'GX NORTE DISTRIBUIDORA' 		
+				when year(a.data_digitacao) =2012 and b.filial='ATACADO FA' 
+				then 'K3X DISTRIBUIDORA' 		
+				when year(a.data_digitacao) =2012 and b.filial='ESTOQUE CENTRAL' 
+				then 'RBX DISTRIBUIDORA' 				
+				else b.filial
+		end as filial_devolucao,
+		sum(case when a.serie_nf_entrada='E1' then 0 else a.valor_item end) as valor_dev_contabil,
+		sum(a.valor_producao) as valor_dev_full,
+		sum((a.valor_producao-case when a.serie_nf_entrada='E1' then 0 else a.valor_item end)) as valor_dev_dsk  
+		FROM WANM_ENTRADAS_DEVOLUCAO (nolock) a 
+		join entradas (nolock) b 
+		on a.nf_entrada=b.nf_entrada  
+		and a.serie_nf_entrada=b.serie_nf_entrada 
+		and a.nome_clifor=b.nome_clifor 
+		WHERE a.DATA_DIGITACAO >= @data_ini AND  a.DATA_DIGITACAO <= @data_fim AND a.NOME_CLIFOR <> 'AGASB' 
+		group by year(a.data_digitacao),month(a.data_digitacao),
+		isnull(case when b.filial_estoque like 'GX NORTE%' then 'ATACADO' else  b.filial_estoque end,'ATACADO'),
+		case 
+				when year(a.data_digitacao) between 2008 and 2009 and b.filial='ATACADO' 
+				then 'TRIMIX' 
+				when year(a.data_digitacao) between 2011 and 2012 and b.filial='ATACADO' 
+				then 'GX NORTE DISTRIBUIDORA' 		
+				when year(a.data_digitacao) =2012 and b.filial='ATACADO FA' 
+				then 'K3X DISTRIBUIDORA' 		
+				when year(a.data_digitacao) =2012 and b.filial='ESTOQUE CENTRAL' 
+				then 'RBX DISTRIBUIDORA' 				
+				else b.filial
+		end) b 
+
+		on  a.ano_faturamento=b.ano_devolucao 
+		and a.mes_faturamento=b.mes_devolucao 
+		and a.filial=b.filial 
+		and a.filial_faturamento=b.filial_devolucao  
+
+
+		left join 
+
+		(select a.ano_faturamento,a.mes_faturamento,a.filial,a.filial_faturamento,
+		a.ValorCusto,b.CUSTO_DEVOL,
+		a.ValorCusto-isnull(b.CUSTO_DEVOL,0) as custo_fat
+		from 
+		(SELECT year(f.emissao) as ano_faturamento,month(f.emissao) as mes_faturamento,f.filial,
+				case 
+					when year(f.emissao) between 2008 and 2009 and f.filial_faturamento='ATACADO' 
+					then 'TRIMIX' 
+					when year(f.emissao) =2012 and f.filial_faturamento='ATACADO' 
+					then 'GX NORTE DISTRIBUIDORA' 		
+					when year(f.emissao) =2012 and f.filial_faturamento='ATACADO FA' 
+					then 'K3X DISTRIBUIDORA' 		
+					when year(f.emissao) =2012 and f.filial_faturamento='ESTOQUE CENTRAL' 
+					then 'RBX DISTRIBUIDORA' 				
+					else f.filial_faturamento
+				end as filial_faturamento,
+		SUM(FP.QTDE * ISNULL(PC.PrCusto, 0)) AS ValorCusto
+		FROM 
+		WANM_FATURAMENTO_PRODUCAO F  
+		INNER JOIN FATURAMENTO_PROD FP   
+		ON F.FILIAL_FATURAMENTO = FP.FILIAL AND F.NF_SAIDA = FP.NF_SAIDA AND F.SERIE_NF = FP.SERIE_NF 
+		LEFT JOIN PRODUTOS P ON FP.PRODUTO = P.PRODUTO 
+		LEFT JOIN v_rs_PrecoAtacado PA ON FP.PRODUTO = PA.PRODUTO LEFT JOIN v_rs_PrecoCusto PC   ON FP.PRODUTO = PC.PRODUTO 
+		WHERE F.FILIAL IN ('ATACADO', 'ATACADO FA')  AND  F.TIPO_OPERACAO = 'V'  AND  F.NOTA_CANCELADA = 0  
+		AND   F.EMISSAO >= @data_ini AND  F.EMISSAO <= @data_fim
+		GROUP BY year(f.emissao) ,month(f.emissao) ,f.filial,
+				case 
+					when year(f.emissao) between 2008 and 2009 and f.filial_faturamento='ATACADO' 
+					then 'TRIMIX' 
+					when year(f.emissao) =2012 and f.filial_faturamento='ATACADO' 
+					then 'GX NORTE DISTRIBUIDORA' 		
+					when year(f.emissao) =2012 and f.filial_faturamento='ATACADO FA' 
+					then 'K3X DISTRIBUIDORA' 		
+					when year(f.emissao) =2012 and f.filial_faturamento='ESTOQUE CENTRAL' 
+					then 'RBX DISTRIBUIDORA' 				
+					else f.filial_faturamento
+				end ) a 
+
+		left join 
+
+		(SELECT 
+		year(a.data_digitacao) as ano_devolucao,month(a.data_digitacao) as mes_devolucao,
+				isnull(case when b.filial_estoque like 'GX NORTE%' then 'ATACADO' else  b.filial_estoque end,'ATACADO') as filial,
+				case 
+						when year(a.data_digitacao) between 2008 and 2009 and b.filial='ATACADO' 
+						then 'TRIMIX' 
+						when year(a.data_digitacao) between 2011 and 2012 and b.filial='ATACADO' 
+						then 'GX NORTE DISTRIBUIDORA' 		
+						when year(a.data_digitacao) =2012 and b.filial='ATACADO FA' 
+						then 'K3X DISTRIBUIDORA' 		
+						when year(a.data_digitacao) =2012 and b.filial='ESTOQUE CENTRAL' 
+						then 'RBX DISTRIBUIDORA' 				
+						else b.filial
+				end as filial_devolucao , 
+		SUM(a.CUSTO_UNIT * a.QTDE_ITEM) As CUSTO_DEVOL 
+		FROM WANM_ENTRADAS_DEVOLUCAO (nolock) a 
+				join entradas (nolock) b 
+				on a.nf_entrada=b.nf_entrada  
+				and a.serie_nf_entrada=b.serie_nf_entrada 
+				and a.nome_clifor=b.nome_clifor 
+		WHERE a.DATA_DIGITACAO >= @data_ini AND  a.DATA_DIGITACAO <=  @data_fim AND  a.ANM_MARCA IN ('ANIMALE', 'F.Y.I', 'A.BRAND')  
+		AND  a.NOME_CLIFOR <> 'AGASB' 
+
+		group by year(a.data_digitacao),month(a.data_digitacao),
+				isnull(case when b.filial_estoque like 'GX NORTE%' then 'ATACADO' else  b.filial_estoque end,'ATACADO'),
+				case 
+						when year(a.data_digitacao) between 2008 and 2009 and b.filial='ATACADO' 
+						then 'TRIMIX' 
+						when year(a.data_digitacao) between 2011 and 2012 and b.filial='ATACADO' 
+						then 'GX NORTE DISTRIBUIDORA' 		
+						when year(a.data_digitacao) =2012 and b.filial='ATACADO FA' 
+						then 'K3X DISTRIBUIDORA' 		
+						when year(a.data_digitacao) =2012 and b.filial='ESTOQUE CENTRAL' 
+						then 'RBX DISTRIBUIDORA' 				
+						else b.filial
+				end
+
+		) b 
+
+		on  a.ano_faturamento=b.ano_devolucao 
+		and a.mes_faturamento=b.mes_devolucao 
+		and a.filial=b.filial 
+		and a.filial_faturamento=b.filial_devolucao ) custos_fat 
+
+
+		on  a.ano_faturamento=custos_fat.ano_faturamento 
+		and a.mes_faturamento=custos_fat.mes_faturamento
+		and a.filial=custos_fat.filial 
+		and a.filial_faturamento=custos_fat.filial_faturamento  
+
+		UNION ALL 
+
+		select b.ano_devolucao,b.mes_devolucao,b.filial,b.filial_devolucao,
+		0 as valor_fat_contabil,
+		0 as valor_fat_full,
+		0 as valor_fat_dsk,
+		isnull(b.valor_dev_contabil,0) as valor_dev_contabil, 
+		isnull(b.valor_dev_full,0) as valor_dev_full,
+		isnull(b.valor_dev_dsk,0) as valor_dev_dsk,
+		custos_fat2.custo_devol*-1 as custo_fat 
+		from 
+		(SELECT year(a.data_digitacao) as ano_devolucao,month(a.data_digitacao) as mes_devolucao,
+		isnull(case when b.filial_estoque like 'GX NORTE%' then 'ATACADO' else  b.filial_estoque end,'ATACADO') as filial,
+		case 
+				when year(a.data_digitacao) between 2008 and 2009 and b.filial='ATACADO' 
+				then 'TRIMIX' 
+				when year(a.data_digitacao) between 2011 and 2012 and b.filial='ATACADO' 
+				then 'GX NORTE DISTRIBUIDORA' 		
+				when year(a.data_digitacao) =2012 and b.filial='ATACADO FA' 
+				then 'K3X DISTRIBUIDORA' 		
+				when year(a.data_digitacao) =2012 and b.filial='ESTOQUE CENTRAL' 
+				then 'RBX DISTRIBUIDORA' 				
+				else b.filial
+		end as filial_devolucao,
+		sum(case when a.serie_nf_entrada='E1' then 0 else a.valor_item end) as valor_dev_contabil,
+		sum(a.valor_producao) as valor_dev_full,
+		sum((a.valor_producao-case when a.serie_nf_entrada='E1' then 0 else a.valor_item end)) as valor_dev_dsk  
+		FROM WANM_ENTRADAS_DEVOLUCAO (nolock) a 
+		join entradas (nolock) b 
+		on a.nf_entrada=b.nf_entrada  
+		and a.serie_nf_entrada=b.serie_nf_entrada 
+		and a.nome_clifor=b.nome_clifor 
+		WHERE a.DATA_DIGITACAO >= @data_ini AND  a.DATA_DIGITACAO <= @data_fim AND a.NOME_CLIFOR <> 'AGASB' 
+		group by year(a.data_digitacao),month(a.data_digitacao),
+		isnull(case when b.filial_estoque like 'GX NORTE%' then 'ATACADO' else  b.filial_estoque end,'ATACADO'),
+		case 
+				when year(a.data_digitacao) between 2008 and 2009 and b.filial='ATACADO' 
+				then 'TRIMIX' 
+				when year(a.data_digitacao) between 2011 and 2012 and b.filial='ATACADO' 
+				then 'GX NORTE DISTRIBUIDORA' 		
+				when year(a.data_digitacao) =2012 and b.filial='ATACADO FA' 
+				then 'K3X DISTRIBUIDORA' 		
+				when year(a.data_digitacao) =2012 and b.filial='ESTOQUE CENTRAL' 
+				then 'RBX DISTRIBUIDORA' 				
+				else b.filial
+		end) b
+
+		left join 
+
+		(SELECT year(w.emissao) as ano_faturamento,month(w.emissao) as mes_faturamento,w.filial,
+		case 
+			when year(w.emissao) between 2008 and 2009 and w.filial_faturamento='ATACADO' 
+			then 'TRIMIX' 
+			when year(w.emissao) =2012 and w.filial_faturamento='ATACADO' 
+			then 'GX NORTE DISTRIBUIDORA' 		
+			when year(w.emissao) =2012 and w.filial_faturamento='ATACADO FA' 
+			then 'K3X DISTRIBUIDORA' 		
+			when year(w.emissao) =2012 and w.filial_faturamento='ESTOQUE CENTRAL' 
+			then 'RBX DISTRIBUIDORA' 				
+			else w.filial_faturamento
+		end as filial_faturamento,
+		sum(w.valor_nf) as valor_fat_contabil,
+		sum(w.valor_total_producao) as valor_fat_full,
+		sum(w.dif_producao) as valor_fat_dsk
+		FROM WANM_FATURAMENTO_PRODUCAO w 
+		INNER JOIN FATURAMENTO F   
+		ON W.FILIAL_FATURAMENTO = F.FILIAL 
+		AND      W.NF_SAIDA = F.NF_SAIDA 
+		AND      W.SERIE_NF = F.SERIE_NF 
+		WHERE W.FILIAL IN ('ATACADO', 'ATACADO FA')  
+		AND  W.TIPO_OPERACAO = 'V'  AND  W.NOTA_CANCELADA = 0  
+		AND  W.EMISSAO >= @data_ini AND  W.EMISSAO <= @data_fim
+		group by year(w.emissao),month(w.emissao),w.filial,
+		case 
+			when year(w.emissao) between 2008 and 2009 and w.filial_faturamento='ATACADO' 
+			then 'TRIMIX' 
+			when year(w.emissao) =2012 and w.filial_faturamento='ATACADO' 
+			then 'GX NORTE DISTRIBUIDORA' 		
+			when year(w.emissao) =2012 and w.filial_faturamento='ATACADO FA' 
+			then 'K3X DISTRIBUIDORA' 		
+			when year(w.emissao) =2012 and w.filial_faturamento='ESTOQUE CENTRAL' 
+			then 'RBX DISTRIBUIDORA' 				
+			else w.filial_faturamento
+		end) a
+
+
+		on  a.ano_faturamento=b.ano_devolucao 
+		and a.mes_faturamento=b.mes_devolucao 
+		and a.filial=b.filial 
+		and a.filial_faturamento=b.filial_devolucao 
+
+		left join 
+
+		(select 	
+		b.ano_devolucao,b.mes_devolucao,b.filial,b.filial_devolucao,b.custo_devol as custo_devol 
+		from 
+		(SELECT 
+		year(a.data_digitacao) as ano_devolucao,month(a.data_digitacao) as mes_devolucao,
+				isnull(case when b.filial_estoque like 'GX NORTE%' then 'ATACADO' else  b.filial_estoque end,'ATACADO') as filial,
+				case 
+						when year(a.data_digitacao) between 2008 and 2009 and b.filial='ATACADO' 
+						then 'TRIMIX' 
+						when year(a.data_digitacao) between 2011 and 2012 and b.filial='ATACADO' 
+						then 'GX NORTE DISTRIBUIDORA' 		
+						when year(a.data_digitacao) =2012 and b.filial='ATACADO FA' 
+						then 'K3X DISTRIBUIDORA' 		
+						when year(a.data_digitacao) =2012 and b.filial='ESTOQUE CENTRAL' 
+						then 'RBX DISTRIBUIDORA' 				
+						else b.filial
+				end as filial_devolucao , 
+		SUM(a.CUSTO_UNIT * a.QTDE_ITEM) As CUSTO_DEVOL 
+		FROM WANM_ENTRADAS_DEVOLUCAO (nolock) a 
+				join entradas (nolock) b 
+				on a.nf_entrada=b.nf_entrada  
+				and a.serie_nf_entrada=b.serie_nf_entrada 
+				and a.nome_clifor=b.nome_clifor 
+		WHERE a.DATA_DIGITACAO >= @data_ini AND  a.DATA_DIGITACAO <= @data_fim AND  a.ANM_MARCA IN ('ANIMALE', 'F.Y.I', 'A.BRAND')  
+		AND  a.NOME_CLIFOR <> 'AGASB' 
+
+		group by year(a.data_digitacao),month(a.data_digitacao),
+				isnull(case when b.filial_estoque like 'GX NORTE%' then 'ATACADO' else  b.filial_estoque end,'ATACADO'),
+				case 
+						when year(a.data_digitacao) between 2008 and 2009 and b.filial='ATACADO' 
+						then 'TRIMIX' 
+						when year(a.data_digitacao) between 2011 and 2012 and b.filial='ATACADO' 
+						then 'GX NORTE DISTRIBUIDORA' 		
+						when year(a.data_digitacao) =2012 and b.filial='ATACADO FA' 
+						then 'K3X DISTRIBUIDORA' 		
+						when year(a.data_digitacao) =2012 and b.filial='ESTOQUE CENTRAL' 
+						then 'RBX DISTRIBUIDORA' 				
+						else b.filial
+				end
+		) b
+
+		left join 
+
+		(SELECT year(f.emissao) as ano_faturamento,month(f.emissao) as mes_faturamento,f.filial,
+				case 
+					when year(f.emissao) between 2008 and 2009 and f.filial_faturamento='ATACADO' 
+					then 'TRIMIX' 
+					when year(f.emissao) =2012 and f.filial_faturamento='ATACADO' 
+					then 'GX NORTE DISTRIBUIDORA' 		
+					when year(f.emissao) =2012 and f.filial_faturamento='ATACADO FA' 
+					then 'K3X DISTRIBUIDORA' 		
+					when year(f.emissao) =2012 and f.filial_faturamento='ESTOQUE CENTRAL' 
+					then 'RBX DISTRIBUIDORA' 				
+					else f.filial_faturamento
+				end as filial_faturamento,
+		SUM(FP.QTDE * ISNULL(PC.PrCusto, 0)) AS ValorCusto
+		FROM 
+		WANM_FATURAMENTO_PRODUCAO F  
+		INNER JOIN FATURAMENTO_PROD FP   
+		ON F.FILIAL_FATURAMENTO = FP.FILIAL AND F.NF_SAIDA = FP.NF_SAIDA AND F.SERIE_NF = FP.SERIE_NF 
+		LEFT JOIN PRODUTOS P ON FP.PRODUTO = P.PRODUTO 
+		LEFT JOIN v_rs_PrecoAtacado PA ON FP.PRODUTO = PA.PRODUTO LEFT JOIN v_rs_PrecoCusto PC   ON FP.PRODUTO = PC.PRODUTO 
+		WHERE F.FILIAL IN ('ATACADO', 'ATACADO FA')  AND  F.TIPO_OPERACAO = 'V'  AND  F.NOTA_CANCELADA = 0  
+		AND   F.EMISSAO >= @data_ini AND  F.EMISSAO <= @data_fim 
+		GROUP BY year(f.emissao) ,month(f.emissao) ,f.filial,
+				case 
+					when year(f.emissao) between 2008 and 2009 and f.filial_faturamento='ATACADO' 
+					then 'TRIMIX' 
+					when year(f.emissao) =2012 and f.filial_faturamento='ATACADO' 
+					then 'GX NORTE DISTRIBUIDORA' 		
+					when year(f.emissao) =2012 and f.filial_faturamento='ATACADO FA' 
+					then 'K3X DISTRIBUIDORA' 		
+					when year(f.emissao) =2012 and f.filial_faturamento='ESTOQUE CENTRAL' 
+					then 'RBX DISTRIBUIDORA' 				
+					else f.filial_faturamento
+				end ) a 
+		on  a.ano_faturamento=b.ano_devolucao 
+		and a.mes_faturamento=b.mes_devolucao 
+		and a.filial=b.filial 
+		and a.filial_faturamento=b.filial_devolucao 
+
+		where a.filial_faturamento is null) custos_fat2
+
+
+		on  b.ano_devolucao=custos_fat2.ano_devolucao
+		and b.mes_devolucao=custos_fat2.mes_devolucao			 
+		and b.filial=custos_fat2.filial 
+		and b.filial_devolucao=custos_fat2.filial_devolucao 
+
+
+
+		where a.filial_faturamento is null ) EXP_FAT
+	
+	ORDER BY ANO_FATURAMENTO,MES_FATURAMENTO,FILIAL_FATURAMENTO	 
+	
+endtext 
+
+f_select(xsel,"curFat")
+
+sele curFat 
+copy to c:\temp\Fat_Animale.xls xls	

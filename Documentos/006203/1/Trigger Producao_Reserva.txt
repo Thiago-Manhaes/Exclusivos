@@ -1,0 +1,10 @@
+--- Bloqueio para saber porque que estão consumindo e o consumo está sendo zerado
+		---#1 - anm.lucas miranda --BLOQUEIO CONSUMO MENOR QUE ZERO chamado: 181152
+		If (Select count(*) from Inserted 
+			where consumida < 0 ) > 0
+			
+			begin
+			  select @errno  = 30007,
+					 @errmsg = 'Consumo não pode ser menor que zero !!!'
+			  goto error
+			end 

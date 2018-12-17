@@ -1,0 +1,244 @@
+define class obj_entrada as custom
+	procedure metodo_usuario
+		lparam xmetodo, xobjeto ,xnome_obj
+		
+		*=messagebox( 'Metodo '+ UPPER(xmetodo) + ' Nome Objeto ' + upper(xnome_obj) )
+		do case
+			* Sintese Soluções - Tiago Carvalho - CRIADO OBJETO PARA IMPRIMIR ETIQUETA DE LOCALIZAÇÃO DE MATÉRIA PRIMA
+			* Grupo Soma       - Julio Cesar - Adicionei sum() na consulta da nota de entrada onde é feito a consulta de peça fracionada - 
+			* 	Quando recebemos mesma peça em 2 pedidos estava duplicando a linha da consulta gerando um valor de saldo errado.
+			
+			Case UPPER(ALLT(xmetodo)) == 'USR_INIT'
+				*SET STEP ON 
+				WAIT WINDOW 'OBJ-SS 1.0' NOWAIT
+				
+				lcColumnCount = THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.columncount 
+				lcColumnCount = lcColumnCount + 1 
+				
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.COL_ETIQUETA.Visible = .f.
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.addcolumn(lcColumnCount )
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.columns[lcColumnCount].name = 'col_etiqueta_peca'
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.width = 70
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.BackColor = 15399423
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.columnorder = 7
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.header1.caption = 'Etiqueta'
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.header1.alignment = 2
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.header1.FONTSIZE = 8
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.addobject('bt_etiqueta_peca','bt_etiqueta_peca')
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.currentcontrol = 'bt_etiqueta_peca'
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.removeobject('text1')
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.currentcontrol = 'bt_etiqueta_peca'
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.sparse = .F.
+				THISFORMSET.LX_FORM1.LX_PAGEFRAME1.PAGE1.LX_GRID_BASE1.col_etiqueta_peca.refresh()
+				
+				THISFORMSET.LX_FORM1.Lx_pageframe1.Page1.lx_grid_base1.Col_tx_QTDE_ESTOQUE_AUX.H_tx_QTDE_ESTOQUE_AUX.Caption = 'Qtde Original/Fracionada'
+
+				x="SELECT ESTOQUE_MAT_PECA.PECA, ESTOQUE_MAT_PECA.PARTIDA, ESTOQUE_MAT_PECA.MATERIAL, ESTOQUE_MAT_PECA.FILIAL, ESTOQUE_MAT_PECA.COR_MATERIAL,ISNULL(WMS_LOCALIZACAO.LOCALIZACAO,ESTOQUE_MAT_PECA.LOCALIZACAO) AS LOCALIZACAO, ESTOQUE_MAT_PECA.QTDE_AUX, "
+				x1="ESTOQUE_MAT_PECA.QTDE, ESTOQUE_MAT_PECA.LARGURA, ESTOQUE_MAT_PECA.DATA_ULT_ENTRADA,   ESTOQUE_MAT_PECA.DATA_ULT_SAIDA, ESTOQUE_MATERIAIS.QTDE_ESTOQUE, ISNULL(ENTRADAS_MAT_PECA.QTDE_FRACIONADA,0) AS QTDE_ESTOQUE_AUX, MATERIAIS.TIPO, "
+				x2="MATERIAIS.FASE_PRODUCAO,  MATERIAIS.SETOR_PRODUCAO, MATERIAIS.FABRICANTE, MATERIAIS.GRUPO, MATERIAIS.COLECAO, MATERIAIS.SUBGRUPO, MATERIAIS.DESC_MATERIAL,  MATERIAIS.UNID_ESTOQUE, MATERIAIS.DIAS_ENTREGA, "
+				x3="MATERIAIS.UNID_AUXILIAR, MATERIAIS.LARGURA AS LARGURA_MATERIAL,  MATERIAIS_CORES.DESC_COR_MATERIAL, MATERIAIS_COMPOSICAO.DESC_COMPOSICAO, MATERIAIS_CORES.REFER_FABRICANTE,   MATERIAIS.CTRL_UNID_AUX, FILIAIS.EMPRESA, "
+				x4="ESTOQUE_MAT_PECA.COD_CLIFOR , ESTOQUE_MAT_PECA.RECEITA, CADASTRO_CLI_FOR.NOME_CLIFOR   FROM ESTOQUE_MAT_PECA   INNER JOIN FILIAIS ON (ESTOQUE_MAT_PECA.FILIAL = FILIAIS.FILIAL )  INNER JOIN ESTOQUE_MATERIAIS "
+				x5="ON (ESTOQUE_MAT_PECA.FILIAL = ESTOQUE_MATERIAIS.FILIAL AND ESTOQUE_MAT_PECA.MATERIAL = ESTOQUE_MATERIAIS.MATERIAL AND ESTOQUE_MAT_PECA.COR_MATERIAL = ESTOQUE_MATERIAIS.COR_MATERIAL )  INNER JOIN MATERIAIS "
+				x6="ON (ESTOQUE_MAT_PECA.MATERIAL = MATERIAIS.MATERIAL )  INNER JOIN MATERIAIS_COMPOSICAO ON (MATERIAIS.COMPOSICAO = MATERIAIS_COMPOSICAO.COMPOSICAO )  INNER JOIN MATERIAIS_CORES "
+				x7="ON (ESTOQUE_MAT_PECA.MATERIAL = MATERIAIS_CORES.MATERIAL AND ESTOQUE_MAT_PECA.COR_MATERIAL = MATERIAIS_CORES.COR_MATERIAL )  LEFT JOIN CADASTRO_CLI_FOR ON (ESTOQUE_MAT_PECA.COD_CLIFOR = CADASTRO_CLI_FOR.CLIFOR ) "
+				x8="LEFT JOIN (select peca,entradas.emissao, entradas.nf_entrada,entradas_mat_peca.material,entradas_mat_peca.cor_material, SUM(entradas_mat_peca.QTDE) as QTDE_FRACIONADA "
+				x9=" from entradas, entradas_mat_peca where entradas_mat_peca.NF_ENTRADA = entradas.NF_ENTRADA "
+				x10=" and ENTRADAS_MAT_PECA.NOME_CLIFOR = entradas.NOME_CLIFOR and entradas_mat_peca.peca <> 'ajuste'  group by peca,entradas.emissao, entradas.nf_entrada,entradas_mat_peca.material,entradas_mat_peca.cor_material ) ENTRADAS_MAT_PECA "
+				x11=" ON ESTOQUE_MAT_PECA.PECA = ENTRADAS_MAT_PECA.PECA AND ESTOQUE_MAT_PECA.MATERIAL = ENTRADAS_MAT_PECA.MATERIAL AND ESTOQUE_MAT_PECA.COR_MATERIAL = ENTRADAS_MAT_PECA.COR_MATERIAL "
+				x12=" LEFT JOIN (SELECT ID_LOG.*,CASE WHEN LOG_LOC.PROCESSO = 'DESLOCALIZACAO PICKING MP' THEN 'TRANSITO' WHEN LOG_LOC.PROCESSO LIKE '%DESLOCALIZACAO%' AND LOG_LOC.PROCESSO <> 'DESLOCALIZACAO PICKING MP' THEN NULL ELSE LOG_LOC.LOCALIZACAO END AS LOCALIZACAO "
+				x13="		FROM (SELECT MAX(ID) AS ID,FILIAL,PECA,MATERIAL,COR_MATERIAL FROM SS_LOG_LOCALIZACAO_MP (NOLOCK) A	JOIN MATERIAIS_LOCALIZA (NOLOCK)  B ON A.LOCALIZACAO = B.LOCALIZACAO WHERE QTDE > 0 AND PROCESSO NOT IN ('LOCALIZACAO PICKING CAIXA') "
+				x14="				GROUP BY FILIAL,PECA,MATERIAL,COR_MATERIAL ) ID_LOG "
+				x15="			JOIN SS_LOG_LOCALIZACAO_MP  (NOLOCK) LOG_LOC ON ID_LOG.ID = LOG_LOC.ID AND ID_LOG.MATERIAL = LOG_LOC.MATERIAL AND ID_LOG.COR_MATERIAL = LOG_LOC.COR_MATERIAL ) WMS_LOCALIZACAO "
+				x16="ON (ESTOQUE_MAT_PECA.PECA = WMS_LOCALIZACAO.PECA AND ESTOQUE_MAT_PECA.FILIAL = WMS_LOCALIZACAO.FILIAL AND ESTOQUE_MAT_PECA.MATERIAL = WMS_LOCALIZACAO.MATERIAL AND ESTOQUE_MAT_PECA.COR_MATERIAL = WMS_LOCALIZACAO.COR_MATERIAL ) "
+
+				THISFORMSET.DataEnvironment.Cur_v_estoque_pecas_00.SelectCmd=x+x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15+x16
+			*Otherwise
+				*return .t.	
+				 
+			Case UPPER(ALLT(xmetodo)) == 'USR_VALID'
+			*SET STEP ON 	
+				If Upper(ALLT(xnome_obj))=='TX_LARGURA'	AND Thisformset.p_tool_status = 'A'
+					
+					X= MESSAGEBOX("Deseja Alterar a Largura por NF ?",3+32,"Largura!")
+						If X=6
+						xfiltro_nf_entrada=inputbox('Informe o Numero da Nota','Filtro Nota Fiscal','')
+							Text To xUpdtLarguraPecaNF NOSHOW Textmerge
+								UPDATE ESTOQUE_RET_PECA SET ESTOQUE_RET_PECA.LARGURA = '<<v_estoque_pecas_00.largura>>'
+								FROM ESTOQUE_RET_MAT ESTOQUE_RET_MAT 
+								
+								
+									JOIN ESTOQUE_RET1_MAT ESTOQUE_RET1_MAT 
+									ON ESTOQUE_RET_MAT.REQ_MATERIAL 	= ESTOQUE_RET1_MAT.REQ_MATERIAL
+									AND ESTOQUE_RET_MAT.FILIAL 			= ESTOQUE_RET1_MAT.FILIAL
+									
+									JOIN ESTOQUE_RET_PECA ESTOQUE_RET_PECA 
+									ON ESTOQUE_RET1_MAT.FILIAL 			= ESTOQUE_RET_PECA.FILIAL
+									AND ESTOQUE_RET1_MAT.REQ_MATERIAL 	= ESTOQUE_RET_PECA.REQ_MATERIAL
+									AND ESTOQUE_RET1_MAT.MATERIAL 		= ESTOQUE_RET_PECA.MATERIAL
+									AND ESTOQUE_RET1_MAT.COR_MATERIAL 	= ESTOQUE_RET_PECA.COR_MATERIAL
+								join materiais materiais
+								on ESTOQUE_RET1_MAT.material = materiais.material
+								join cadastro_cli_for cadastro_cli_for
+								on ESTOQUE_RET_MAT.nome_clifor = cadastro_cli_for.NOME_CLIFOR 
+								join filiais filiais
+								on ESTOQUE_RET_MAT.filial = filiais.filial
+								and ESTOQUE_RET1_MAT.filial = filiais.filial
+								and ESTOQUE_RET_PECA.filial = filiais.filial
+								join ESTOQUE_MAT_PECA ESTOQUE_MAT_PECA
+								on ESTOQUE_MAT_PECA.FILIAL = ESTOQUE_RET_PECA.FILIAL
+								and ESTOQUE_MAT_PECA.MATERIAL = ESTOQUE_RET_PECA.MATERIAL
+								AND ESTOQUE_MAT_PECA.COR_MATERIAL = ESTOQUE_RET_PECA.COR_MATERIAL
+								Where <<o_006010.p_comando_where>> AND
+								ESTOQUE_RET_MAT.nf_entrada LIKE '%<<xfiltro_nf_entrada>>%' AND
+								ESTOQUE_RET_MAT.nome_clifor = '<<v_estoque_pecas_00.nome_clifor>>' AND
+								ESTOQUE_RET_PECA.material = '<<v_estoque_pecas_00.material>>' AND
+								ESTOQUE_RET_PECA.cor_material = '<<v_estoque_pecas_00.cor_material>>'
+							Endtext	
+							 
+							If !f_update(xUpdtLarguraPecaNF)
+									Messagebox("Não foi Possível Alterar a Largura!!!")
+									Return .F.
+						*	Else
+						*			Messagebox("Alteração com Sucesso!!!")
+							Endif
+						Endif							
+						
+						If X=7	
+							Text To xUpdtLarguraPeca NOSHOW Textmerge
+								UPDATE C SET C.LARGURA = '<<v_estoque_pecas_00.largura>>'
+								FROM ESTOQUE_RET_MAT A
+								JOIN ESTOQUE_RET1_MAT B
+								ON A.REQ_MATERIAL = B.REQ_MATERIAL
+								AND A.FILIAL = B.FILIAL
+								JOIN ESTOQUE_RET_PECA C
+								ON B.FILIAL = C.FILIAL
+								AND B.REQ_MATERIAL = C.REQ_MATERIAL
+								AND B.MATERIAL = C.MATERIAL
+								AND B.COR_MATERIAL = C.COR_MATERIAL
+
+								WHERE B.MATERIAL = '<<v_estoque_pecas_00.material>>' AND B.COR_MATERIAL = '<<v_estoque_pecas_00.cor_material>>' 
+								AND C.PECA = '<<v_estoque_pecas_00.peca>>' 
+								AND A.NOME_CLIFOR = '<<v_estoque_pecas_00.nome_clifor>>'
+								AND C.FILIAL = '<<v_estoque_pecas_00.filial>>'
+								And NF_ENTRADA IS NOT NULL
+							Endtext
+
+							If !f_update(xUpdtLarguraPeca)
+									Messagebox("Não foi Possível Alterar a Largura!!!")
+									Return .F.
+						*	Else
+						*			Messagebox("Alteração com Sucesso!!!")
+							Endif
+						Endif
+						
+						If X=2
+							Return .F.
+						Endif	
+					Endif	
+		Otherwise
+		Return .T.					
+		endcase
+	endproc
+enddefine
+
+
+DEFINE CLASS bt_etiqueta_peca AS commandbutton
+	Height = 25
+	Width = 85
+	FontBold = .F.
+	FontName = "Arial"
+	FontSize = 8
+    Caption = "Etiqueta"
+	Name = "bt_etiqueta_peca"
+	autosize = .T.
+	visible = .T.
+	enabled = .T.
+		
+	PROCEDURE Click
+		
+		IF f_vazio(v_estoque_pecas_00.material) OR f_vazio(v_estoque_pecas_00.cor_material) OR f_vazio(v_estoque_pecas_00.PECA) 
+			RETURN .T.
+		ELSE  
+			TEXT TO lcSql TEXTMERGE noshow
+				SELECT 	A.MATERIAL,
+						B.DESC_MATERIAL,
+						A.PECA,
+						A.LOCALIZACAO,
+						B.DESC_COMPOSICAO,
+						B.UNID_ESTOQUE,
+						A.LARGURA,
+						A.COR_MATERIAL,
+						B.COLECAO,
+						C.DESC_COR_MATERIAL,
+						B.FABRICANTE,
+						A.QTDE,
+						A.PARTIDA,
+						RECEITA = ISNULL(A.RECEITA,''),
+						NF_ENTRADA = (SELECT TOP 1 AA.NF_ENTRADA FROM ESTOQUE_RET_PECA BB,ESTOQUE_RET_MAT AA WHERE AA.REQ_MATERIAL = BB.REQ_MATERIAL AND AA.FILIAL = BB.FILIAL AND LTRIM(RTRIM(ISNULL(AA.NF_ENTRADA,'')))<>'' AND BB.PECA = A.PECA AND BB.PARTIDA = A.PARTIDA AND BB.PECA <>'AJUSTE' ORDER BY EMISSAO ASC),
+						NOME_CLIFOR = (SELECT TOP 1 AA.NOME_CLIFOR FROM ESTOQUE_RET_PECA BB,ESTOQUE_RET_MAT AA WHERE AA.REQ_MATERIAL = BB.REQ_MATERIAL AND AA.FILIAL = BB.FILIAL AND LTRIM(RTRIM(ISNULL(AA.NF_ENTRADA,'')))<>'' AND BB.PECA = A.PECA AND BB.PARTIDA = A.PARTIDA AND BB.PECA <>'AJUSTE' ORDER BY EMISSAO ASC)
+					FROM ESTOQUE_MAT_PECA A(nolock)
+					INNER JOIN MATERIAIS B(nolock)
+						ON A.MATERIAL = B.MATERIAL 
+					INNER JOIN MATERIAIS_CORES C(nolock)
+						ON A.MATERIAL = C.MATERIAL AND A.COR_MATERIAL = C.COR_MATERIAL 
+					where a.peca = ?v_estoque_pecas_00.PECA
+						and a.partida = ?v_estoque_pecas_00.partida
+			ENDTEXT
+			
+			IF !f_select (lcSql,"CurTmpEstoquePeca")
+				MESSAGEBOX("Erro ao consultar o estoque da peça, Tente novamente!",0+16,"Obj-Erro Consulta")
+				RETURN .f.
+			ENDIF
+			
+		
+			strPeca 			= ALLTRIM(v_estoque_pecas_00.PECA)
+			strQtde 			= ALLTRIM(str(v_estoque_pecas_00.QTDE, 7,3))
+			strUnidEstoque 		= ALLTRIM(v_estoque_pecas_00.unid_estoque)
+			strLargura 			= ALLTRIM(str(v_estoque_pecas_00.LARGURA,6,2))
+			strPartida			= ALLTRIM(v_estoque_pecas_00.PARTIDA)
+			strLocalizacao 		= ALLTRIM(v_estoque_pecas_00.localizacao)
+			strFabricante 		= ALLTRIM(v_estoque_pecas_00.fabricante)
+			strMaterial 		= ALLTRIM(v_estoque_pecas_00.material)
+			strDescMaterial 	= ALLTRIM(v_estoque_pecas_00.DESC_MATERIAL)
+			strDescComposicao 	= ALLTRIM(v_estoque_pecas_00.Desc_Composicao)
+			strCor 				= ALLTRIM(v_estoque_pecas_00.cor_material)
+			strDescCor 			= ALLTRIM(v_estoque_pecas_00.desc_cor_material)
+			strNFEntrada		= NVL(ALLTRIM(CurTmpEstoquePeca.nf_entrada),'')
+			strFornecedor		= NVL(ALLTRIM(CurTmpEstoquePeca.nome_clifor),'')
+			strColecao			= ALLTRIM(CurTmpEstoquePeca.COLECAO)
+			strPecaTemp			= ALLTRIM(CurTmpEstoquePeca.RECEITA)
+			strSaida			= ""
+			
+			nAntArea = select()
+
+			wait wind 'IMPRIMINDO ETIQUETAS...' nowait
+
+			strProc = SET("Procedure")
+
+			Set procedure To \Linx\Report\User\Proc_SS_Etiquetas.prg Additive
+
+			IF !DIRECTORY('C:\SINTESE\ETIQUETA')
+				MD('C:\SINTESE\ETIQUETA')
+			ENDIF
+
+			lcNomeArquivo ='C:\SINTESE\ETIQUETA\PECA_MP_'+ALLTRIM(WUSUARIO)+'.ETQ'
+			
+			IF FILE (lcNomeArquivo)
+				DELETE FILE &lcNomeArquivo 
+			ENDIF
+			
+			intArq = fCreate(lcNomeArquivo, 0)
+			if (intArq >= 0)
+				fwrite(intArq, Proc_Etiqueta_Peca(strPeca, strQtde, strUnidEstoque, strLargura, strPartida, strLocalizacao, strFabricante, strMaterial, strDescMaterial, strDescComposicao, strCor, strDescCor,strNFEntrada,strFornecedor,strColecao,strPecaTemp,strSaida))
+				fClose(intArq)
+				!COPY &lcNomeArquivo LPT1
+			Endif
+
+			SELECT (nAntArea)
+
+			SET PROCEDURE TO &strProc
+
+			wait wind 'IMPRESSÃO CONCLUIDA.' nowait
+		endif
+	EndProc
+EndDefine
