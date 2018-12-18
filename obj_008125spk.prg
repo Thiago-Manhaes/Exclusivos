@@ -67,7 +67,7 @@ define class obj_entrada as custom
 					if !f_vazio(xalias)
 						sele &xalias
 					endif	
-					
+					* Mãe, estou escrevendo. bjs
 					
 				case upper(xmetodo) == 'USR_VALID' AND UPPER(xnome_obj)=='TX_CODIGO_BARRAS'
 			
