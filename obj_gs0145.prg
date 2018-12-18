@@ -8,6 +8,7 @@
 * OBJETIVO.: Bloquear Alteracoes apos fases de producao
 * OBJETIVO.: Recalculo de Custos
 * OBJETIVO.: Recalculo de preco atacado automatico
+* Objetivo.: Fazer um excelente trabalho
 ********************************************************************************************************************* 
 
 * Alteração ********************************************************************************************************* 
