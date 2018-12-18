@@ -1,16 +1,16 @@
-* CriaÁ„o *********************************************************************************************************** 
+* Cria√ß√£o *********************************************************************************************************** 
 * PROGRAMADOR(A).:  Sidnei Stellet                                                                                                *
 * DATA...........:  20/01/2007                                                                                               *
-* HOR¡RIO........:  13;00                                                                                           *
+* HOR√ÅRIO........:  13;00                                                                                           *
 ********************************************************************************************************************* 
 * CLIENTE..: Animale                                                                                                *
-* OBJETIVO.: Inclusao coluna 1™ Reserva e Filiais Estoque					                    *
+* OBJETIVO.: Inclusao coluna 1¬™ Reserva e Filiais Estoque					                    *
 ********************************************************************************************************************* 
 
-* AlteraÁ„o ********************************************************************************************************* 
+* Altera√ß√£o ********************************************************************************************************* 
 * PROGRAMADOR(A).:                                                                                                  *
 * DATA...........:                                                                                                  *
-* HOR¡RIO........:                                                                                                  *
+* HOR√ÅRIO........:                                                                                                  *
 ********************************************************************************************************************* 
 * CLIENTE..:                                                                                                        *
 * OBJETIVO.:                                                                                                        *
@@ -18,21 +18,21 @@
 
 
 ********************************************************************************************************************* 
-*- Programa Base de CriaÁ„o de Objeto de Entrada                                                                    *
+*- Programa Base de Cria√ß√£o de Objeto de Entrada                                                                    *
 ********************************************************************************************************************* 
 *- O programa deve ser texto com o nome = OBJ_xxxxxx.prg onde x=numero da tela                                      *
 *- Este arquivo deve ser colocado no diretorio \Linx_sql\Linx\Exclusivos                                            *
 ********************************************************************************************************************* 
 *- Existem 2 parametros que influem nos objetos de Entrada:                                                         *
 *  utiliza_objeto_entrada = .f. desliga os objetos de entrada para testar telas sem os mesmos                       *
-*  mostra_nome_obj = .t. mostra o nome dos objetos no tooltip em tempo de execuÁ„o para facilitar o desenvolvimento *
+*  mostra_nome_obj = .t. mostra o nome dos objetos no tooltip em tempo de execu√ß√£o para facilitar o desenvolvimento *
 ********************************************************************************************************************* 
 * - Atencao !!!!!!!!!!!														                                        *
 * - Toda vez que houver qualquer alteracao no PRG deve-se apagar o arquivo FXP                                      *
 ********************************************************************************************************************* 
-
+*- ALTERA√á√ÉO PERLA -*
 define class obj_entrada as custom
-	*- Nome do metodo/funÁ„o que os objetos linx v„o chamar.
+	*- Nome do metodo/fun√ß√£o que os objetos linx v√£o chamar.
 
 	procedure metodo_usuario
 		*- Parametros do metodo:
@@ -62,8 +62,8 @@ define class obj_entrada as custom
 		*	USR_TRIGGER_BEFORE ->Return .f. Para o Salvamento e da Rollback
 
 
-		******************** Metodo chamado pelos Objetos na ValidaÁ„o
-		*   USR_VALID -> Return .f. N„o deixa o Usuario sair do objeto.
+		******************** Metodo chamado pelos Objetos na Valida√ß√£o
+		*   USR_VALID -> Return .f. N√£o deixa o Usuario sair do objeto.
 
 		******************** Metodo chamado pelos PageFrames
 		*   USR_ACTIVE_PAGE -> Return .f. Para o Metodo.
@@ -137,7 +137,7 @@ define class obj_entrada as custom
 				
 				
 				    *adicao da coluna na grid de materiais 
-				    *adicao da coluna, col_data_s_sobra, onde ir· ir· preecher a data sem sobra no estoque
+				    *adicao da coluna, col_data_s_sobra, onde ir√° ir√° preecher a data sem sobra no estoque
 				    ** lucas miranda 
 					WITH THISFORMSET.lx_form1.lx_PAGEFRAME1.page3.LX_PAGEFRAME1.Page1.lx_GRID_FILHA1 				
 						.addColumn(7)
@@ -188,7 +188,7 @@ define class obj_entrada as custom
 					ENDIF
 
 					
-****** Bloqueio de alocaÁ„o de recursos - Silvio Luiz - 27042016 ***********************
+****** Bloqueio de aloca√ß√£o de recursos - Silvio Luiz - 27042016 ***********************
  			case upper(xmetodo) == 'USR_VALID' AND upper(xnome_obj) == 'TX_CUSTO_TAREFA'  
 				 						
 					IF THISFORMSET.pp_ANM_BLOQUEIO_RECURSO=.T.
@@ -224,8 +224,8 @@ define class obj_entrada as custom
 						SELECT CUR_PRODUTO
 						SELECT CUR_CUSTO_ANTERIOR
 						
-							IF CUR_FASE.VALOR_PROPRIEDADE='M√O DE OBRA' AND CUR_PRODUTO.VALOR_PROPRIEDADE='INTERNO'   
-								MESSAGEBOX("O USU¡RIO N√O TEM PERMISS√O PARA ALTERAR O CUSTO DESTA FASE!!",48) 
+							IF CUR_FASE.VALOR_PROPRIEDADE='M√ÉO DE OBRA' AND CUR_PRODUTO.VALOR_PROPRIEDADE='INTERNO'   
+								MESSAGEBOX("O USU√ÅRIO N√ÉO TEM PERMISS√ÉO PARA ALTERAR O CUSTO DESTA FASE!!",48) 
 				    			thisform.LX_FORM1.LX_pageframe1.PAge5.LX_pageframe1.PAge1.LX_GRID_FILHA1.COL_tx_CUSTO_EFETIVO.TX_CUSTO_EFETIVO.Enabled= .F.
 				    			REPLACE v_producao_ordem_01_tarefas.CUSTO_TAREFA WITH CUR_CUSTO_ANTERIOR.CUSTO_TAREFA
 				    			*RETURN .f.
@@ -234,7 +234,7 @@ define class obj_entrada as custom
 					
 									
 			case upper(xmetodo) == 'USR_VALID' AND upper(xnome_obj) == 'TV_RECURSO_PRODUTIVO'
-				**** Lucas Miranda - 16/03/2017 - Bloqueia ProgramaÁ„o *****
+				**** Lucas Miranda - 16/03/2017 - Bloqueia Programa√ß√£o *****
 				Sele V_Producao_Ordem_01_tarefas
 
 				TEXT TO xBloqProg NOSHOW TEXTMERGE
@@ -265,11 +265,11 @@ define class obj_entrada as custom
 					Replace V_Producao_Ordem_01_tarefas.recurso_produtivo with IIF(F_Vazio(Cur_Tarefas.recurso_produtivo),'22264',Cur_Tarefas.recurso_produtivo)
 					Replace V_Producao_Ordem_01_tarefas.desc_recurso with IIF(F_VAZIO(Cur_Tarefas.recurso_produtivo),'INDEFINIDO',Cur_Tarefas.DESC_RECURSO)
 					Thisformset.lx_form1.lx_pageframe1.page5.Lx_pageframe1.page1.lx_GRID_FILHA1.col_tv_faSE_PRODUCAO.SetFocus
-					MESSAGEBOX("Fornecedor bloqueado programaÁ„o !!!",0+16)
+					MESSAGEBOX("Fornecedor bloqueado programa√ß√£o !!!",0+16)
 					Return .F.
 				Endif
 
-				*Fim Bloqueia ProgramaÁ„o*
+				*Fim Bloqueia Programa√ß√£o*
 				IF THISFORMSET.pp_ANM_BLOQUEIO_RECURSO=.T.
 			
 					SELECT v_producao_ordem_01_tarefas
@@ -293,12 +293,12 @@ define class obj_entrada as custom
 						SELECT CUR_FASE
 						SELECT CUR_PRODUTO
 						
-							IF CUR_FASE.VALOR_PROPRIEDADE='M√O DE OBRA' AND CUR_PRODUTO.VALOR_PROPRIEDADE='INTERNO'  
+							IF CUR_FASE.VALOR_PROPRIEDADE='M√ÉO DE OBRA' AND CUR_PRODUTO.VALOR_PROPRIEDADE='INTERNO'  
 								SELECT v_producao_ordem_01_tarefas
 									IF v_producao_ordem_01_tarefas.recurso_produtivo<>'99'
-										MESSAGEBOX("O USU¡RIO TEM PERMISS√O PARA INCLUIR NESTA FASE SOMENTE O RECURSO '99' - 'AGUARDANDO DEFINI«AO'!!",48) 
+										MESSAGEBOX("O USU√ÅRIO TEM PERMISS√ÉO PARA INCLUIR NESTA FASE SOMENTE O RECURSO '99' - 'AGUARDANDO DEFINI√áAO'!!",48) 
 										REPLACE recurso_produtivo WITH '99'
-										REPLACE desc_recurso WITH 'AGUARDANDO DEFINI«AO'
+										REPLACE desc_recurso WITH 'AGUARDANDO DEFINI√áAO'
 										RETURN .f.
 									ENDIF 
 							ENDIF                                                       
@@ -331,17 +331,17 @@ define class obj_entrada as custom
 						SELECT CUR_FASE
 						SELECT CUR_PRODUTO
 						
-							IF CUR_FASE.VALOR_PROPRIEDADE='M√O DE OBRA' AND CUR_PRODUTO.VALOR_PROPRIEDADE='INTERNO'  
+							IF CUR_FASE.VALOR_PROPRIEDADE='M√ÉO DE OBRA' AND CUR_PRODUTO.VALOR_PROPRIEDADE='INTERNO'  
 								SELECT v_producao_ordem_01_tarefas
 									IF v_producao_ordem_01_tarefas.recurso_produtivo<>'99'
-										MESSAGEBOX("O USU¡RIO TEM PERMISS√O PARA INCLUIR NESTA FASE SOMENTE O RECURSO '99' - 'AGUARDANDO DEFINI«AO'!!",48) 
+										MESSAGEBOX("O USU√ÅRIO TEM PERMISS√ÉO PARA INCLUIR NESTA FASE SOMENTE O RECURSO '99' - 'AGUARDANDO DEFINI√áAO'!!",48) 
 										REPLACE recurso_produtivo WITH '99'
-										REPLACE desc_recurso WITH 'AGUARDANDO DEFINI«AO'
+										REPLACE desc_recurso WITH 'AGUARDANDO DEFINI√áAO'
 										RETURN .f.
 									ENDIF 
 							ENDIF                                                       
 					ENDIF	    				
-****** Bloqueio de alocaÁ„o de recursos - Silvio Luiz - 27042016 ***********************
+****** Bloqueio de aloca√ß√£o de recursos - Silvio Luiz - 27042016 ***********************
 
 				case upper(xmetodo) == 'USR_VALID' AND upper(xnome_obj)=='TX_RESERVA_ORIGINAL' AND thisformset.p_tool_status $'IA'
 
@@ -433,7 +433,7 @@ define class obj_entrada as custom
 						       
 							   IF IIF(F_VAZIO(CurVerReserva.reserva_original),0,CurVerReserva.reserva_original) > V_PRODUCAO_ORDEM_01_MATERIAIS.RESERVA_ORIGINAL AND thisformset.p_tool_status $'A'
 							   	 
-							   	 MESSAGEBOX("Sem permiss„o para alterar reserva para menos,"+CHR(13)+"Favor verificar.",0+48,"AtenÁ„o!!!")
+							   	 MESSAGEBOX("Sem permiss√£o para alterar reserva para menos,"+CHR(13)+"Favor verificar.",0+48,"Aten√ß√£o!!!")
 							   	 
 							   	 SELECT V_PRODUCAO_ORDEM_01_MATERIAIS 
 							   	 replace reserva_original WITH IIF(F_VAZIO(CurVerReserva.reserva_original),0,CurVerReserva.reserva_original)
@@ -470,7 +470,7 @@ define class obj_entrada as custom
 								RELEASE cur_reserva
 							ENDSCAN
 
-*--Ronald -- retirado replace em atualizaÁ„o 
+*--Ronald -- retirado replace em atualiza√ß√£o 
 
 
 ** Bloqueio alterar reserva se estiver enviado para almoxarifado Lucas Miranda e permissao para alterar reserva- 30/11/2016 **		
@@ -511,7 +511,7 @@ define class obj_entrada as custom
 				    xQtdeMat = RECCOUNT()
 				    
 					If !F_Vazio(CurxVerRede.Produto) and !F_Vazio(xVerMost.programacao) and xQtdeMat > 0
-						Messagebox("Proibido Recalcular a O.P. de Mostru·rio !!!",0+16,"Mostru·rio")
+						Messagebox("Proibido Recalcular a O.P. de Mostru√°rio !!!",0+16,"Mostru√°rio")
 						Return .F.
 					Endif
 				
@@ -560,7 +560,7 @@ define class obj_entrada as custom
 *!*						If !F_Vazio(CurxVerRede.Produto) and !F_Vazio(xVerMost.programacao) and Thisformset.pp_ANM_BLOQ_USUA_MOST = .T.
 *!*							IF !(xMatTipo.indica_tecido = .T. and Thisformset.pp_ANM_PERM_ALT_PANOS_MOST = .T. )	
 *!*								If !'RECORRE' $ xMatTipo.TIPO
-*!*									Messagebox("Proibido alterar reserva de Mostru·rio !!!",0+16,"Mostru·rio")
+*!*									Messagebox("Proibido alterar reserva de Mostru√°rio !!!",0+16,"Mostru√°rio")
 *!*									USE IN xVerMost
 *!*									USE IN xMatTipo
 *!*									Return .F.
@@ -610,7 +610,7 @@ define class obj_entrada as custom
 *!*							Sele xVerMost	
 *!*	 						
 *!*							If !F_Vazio(CurxVerRedeMost.Produto) AND Thisformset.pp_ANM_BLOQ_USUA_MOST = .T. AND !F_Vazio(xVerMost.programacao)
-*!*								Messagebox("Proibido Incluir/Excluir Material Manualmente na O.P. de  mostru·rio",0+16)
+*!*								Messagebox("Proibido Incluir/Excluir Material Manualmente na O.P. de  mostru√°rio",0+16)
 *!*								Return .F.
 *!*							Endif               	
 	                	
@@ -691,7 +691,7 @@ define class obj_entrada as custom
 	
 							 	 if type("thisformset.lx_form1.lx_pageframe1.page2.cmb_filial_producao")<>"U"
 								  	 f_select("select LTRIM(RTRIM(valor_propriedade)) as TIPO from prop_produtos where propriedade = '00036' and produto = ?V_PRODUCAO_ORDEM_01.produto","xTipoProd")
-								     If (thisformset.pp_anm_val_cons_filial_op = .t. AND  xTipoProd.TIPO = 'PRODUTO ACABADO') OR xTipoProd.TIPO = 'PRODU«AO'
+								     If (thisformset.pp_anm_val_cons_filial_op = .t. AND  xTipoProd.TIPO = 'PRODUTO ACABADO') OR xTipoProd.TIPO = 'PRODU√áAO'
 										 SELECT V_PRODUCAO_ORDEM_01_MOV_MAT
 										 Go Top
 
@@ -736,7 +736,7 @@ define class obj_entrada as custom
 					go top	
 					loca for fase_producao='021'		
 					if !found()
-						messagebox("… necess·rio inserir a Fase 021-Recebimento antes da Revis„o ",48,"AtenÁ„o!!")
+						messagebox("√â necess√°rio inserir a Fase 021-Recebimento antes da Revis√£o ",48,"Aten√ß√£o!!")
 						retu .f.		 
 					endif	
 					
@@ -839,9 +839,9 @@ define class obj_entrada as custom
 												Cur_Valida.SOBRA_MRP_FINAL < 0 AND ;
 												Cur_Valida.valida_prod > 0
 									
-											MESSAGEBOX("Produto/Cor com pedido de compra de MP j· emitido."+CHR(13)+;
+											MESSAGEBOX("Produto/Cor com pedido de compra de MP j√° emitido."+CHR(13)+;
 												"Favor solicitar o cancelamento com a compradora"+CHR(13)+ALLTRIM(Cur_Valida.usuario_linx),64,+;
-												"AlteraÁ„o de Grade n„o Permitida")					
+												"Altera√ß√£o de Grade n√£o Permitida")					
 											
 											Return .F.
 										Endif
@@ -1121,12 +1121,12 @@ DEFINE CLASS bt_mata_reserva AS botao
 
 			If V_PRODUCAO_ORDEM_01.STATUS<>'E'
 			
-				messagebox("A OP n„o est· Encerrada !",48,"AtenÁ„o!")
+				messagebox("A OP n√£o est√° Encerrada !",48,"Aten√ß√£o!")
 				retu .f. 
 				
 			Else	
 
-				if messagebox("Deseja Matar Saldo de Reserva desta OP?",4,"AtenÁ„o!!!") = 6
+				if messagebox("Deseja Matar Saldo de Reserva desta OP?",4,"Aten√ß√£o!!!") = 6
 				
 					text to xupdt noshow textmerge	
 						update producao_reserva 
@@ -1138,7 +1138,7 @@ DEFINE CLASS bt_mata_reserva AS botao
 					
 					
 					if !f_update(xupdt)  
-						messagebox("N„o foi possÌvel matar saldo desta OP",48,"AtenÁ„o!!!")
+						messagebox("N√£o foi poss√≠vel matar saldo desta OP",48,"Aten√ß√£o!!!")
 					endif	
 					
 					o_toolbar.Botao_refresh.Click()  	
@@ -1188,12 +1188,12 @@ DEFINE CLASS bt_altera_reserva AS botao
 
 			If V_PRODUCAO_ORDEM_01.STATUS='E'
 			
-				messagebox("A OP est· Encerrada !",48,"AtenÁ„o!")
+				messagebox("A OP est√° Encerrada !",48,"Aten√ß√£o!")
 				retu .f. 
 				
 			Else	
 
-				if messagebox("Deseja Alterar Reserva desta OP?",4,"AtenÁ„o!!!") = 6 
+				if messagebox("Deseja Alterar Reserva desta OP?",4,"Aten√ß√£o!!!") = 6 
 
 					sele v_producao_ordem_01_materiais
 					repla tipo_reserva with 2 
@@ -1242,7 +1242,7 @@ DEFINE CLASS lb_mata_reserva AS lx_label
 	
 	Procedure DblClick	
 	
-		MESSAGEBOX("aprendendo!!",48,"atenÁ„o!")
+		MESSAGEBOX("aprendendo!!",48,"aten√ß√£o!")
 	
 	Endproc
 	
