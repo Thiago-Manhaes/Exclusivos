@@ -1,6 +1,6 @@
 
 
-****EXPORTA CLIENTES ABRAND****************************
+****EXPORTA CLIENTES ABRAND****Oi, tudo bem?************************
 
 TEXT TO XSEL NOSHOW TEXTMERGE
 

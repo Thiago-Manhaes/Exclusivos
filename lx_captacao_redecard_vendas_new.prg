@@ -1,3 +1,5 @@
+#comentário bolado no meio do código
+
 PROCEDURE	LX_CAPTACAO_REDECARD_VENDAS_NEW
 
 			LPARAMETERS PFORMSET, ;
